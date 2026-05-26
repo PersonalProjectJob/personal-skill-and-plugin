@@ -1,4 +1,4 @@
-# Figma Agentic Skills for Gemini Antigravity (Connected to figma-console-mcp)
+# Figma Agentic Skills for AI Agent (Connected to figma-console-mcp)
 
 A collection of advanced UI/UX automation skills for AI coding assistants (like Antigravity or Claude) that interface with Figma through the **figma-console MCP server**. 
 
