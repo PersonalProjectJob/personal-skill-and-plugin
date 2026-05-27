@@ -18,6 +18,8 @@ Apply this skill when:
 
 ## 2. Automated Background Removal Workflow
 
+To use the automated workflow, the agent must check for a `config.json` file in the plugin directory (e.g., `C:\Users\AD\.gemini\config\plugins\figma-remove-bg-plugin\config.json`) to retrieve the `remove_bg_api_key`. If the key is found, the agent must replace `YOUR_REMOVE_BG_API_KEY` in the JS template below with the actual key before executing `figma_execute`.
+
 You can programmatically export the target node, send it to a background removal service, and apply the transparent result back to the node using `figma_execute`.
 
 ### JS Script Template for `figma_execute`:
