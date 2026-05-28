@@ -63,6 +63,24 @@ Ensure components align with the project design architecture and reusable patter
     * **Buttons**: `.btn-ghost`, `.btn-outline-ghost`, `.btn-primary-action`, `.btn-gradient-cta` (gold-cyan gradient).
     * **Cards & Containers**: `.card-elevated` (glass effect + shadow), `.card-code-block` (monospace container), `.bordered-list-item`.
 
+### 4. Self-Criticism & Code Review Workflow
+The AI Agent must perform an active self-review and self-critique phase before applying changes or declaring completion:
+- **Design & Logic Simplification**:
+  * *Simplicity (KISS)*: Can this logic be written simpler? Did I introduce unnecessary local states, redundant re-renders, or overly complex helper functions?
+  * *Refactoring*: Can code chunks be cleaned up, simplified, or consolidated?
+- **DRY & Reuse Critique**:
+  * *Code Duplication*: Am I writing custom code for something that already exists in the codebase (e.g., distance calculations, API services, formatting utils, date formats)?
+  * *UI Reuse*: Did I search for existing shared UI components (Atoms/Molecules) before writing custom layout blocks?
+- **Component Single Responsibility**:
+  * *Separation of Concerns*: Does the component do too many things? (e.g., managing state, calling API hooks, handling pagination, and rendering complex UI all in one file).
+  * *Sub-component Extraction*: If it does, split it. Move server fetching to custom query hooks, and UI panels to sub-components.
+- **Edge Case Analysis**:
+  * *UX Robustness*: Did I handle standard loading states, API error overlays, empty list fallbacks, and button disabling during actions?
+  * *Input Robustness*: Are inputs validated? Does the UI handle long overflow text cleanly without layout breakage?
+- **Code Cleanliness Audit**:
+  * *Debug Cleanups*: Ensure no `console.log`, `debugger`, or temporary mockup values are left.
+  * *Import Health*: Remove all unused imports, dead variables, and redundant comments.
+
 ---
 
 ## Verification & Checks Checklist
@@ -76,5 +94,7 @@ Before declaring a Front-End task complete, perform these checks:
 6. [ ] Prop & Data validation: Are React props documented, and is state correctly separated (Query vs Zustand)?
 7. [ ] Security Check: Are there any un-sanitized dynamic HTML bindings or exposed secret keys?
 8. [ ] Compilation: Does running the build command compile the application cleanly without errors?
+9. [ ] Self-Criticism: Did you review the code changes for simplicity, single responsibility, edge cases, and clean imports?
+
 
 
