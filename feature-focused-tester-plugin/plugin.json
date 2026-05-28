@@ -1,0 +1,5 @@
+{
+  "name": "feature-focused-tester-plugin",
+  "version": "1.0.0",
+  "description": "Plugin for planning, writing, and executing automation tests targeted specifically at a newly added or modified feature, and validating code changes using static analysis."
+}
