@@ -58,6 +58,11 @@ Ensure components align with the project design architecture and reusable patter
   * **Color Palette**: Strictly use `luxuryBlack` (`#050505`), `luxuryCoal` (`#11100d`), `luxuryGold` (`#d4af37`), `brandCyan` (`#32D7FF`), `inkBlue` (`#0B1C30`), `mutedGrey` (`#565E74`), and their semantic mappings.
   * **Typography Scale**: Use classes prefixed with `text-flox-*` (e.g., `text-flox-body`, `text-flox-heading`). Font families are GeistSans (or Inter) and GeistMono for logs/payment IDs.
   * **No Arbitrary Styling**: Do NOT use hardcoded hex colors or arbitrary Tailwind values. Do not use generic classes like `rounded-md` or `rounded-xl`; instead, use `rounded-flox-inputs` (6px) or `rounded-flox-cards` (12px).
+- **Mobile-First & Apple Responsive Standards (HIG Compliant)**:
+  * *Mobile-First Styling*: Write base CSS/Tailwind classes for mobile layout first (e.g., full width `w-full`, vertical stacks `flex-col`). Use Tailwind's `min-width` responsive prefixes (e.g. `md:flex-row`, `lg:w-1/2`) to build up complexity for desktop screens. Do NOT write desktop-first styles overridden by `max-width` queries.
+  * *Safe Area Insets*: Apply Safe Area spacing variables on layout roots, floating buttons, bottom navbars, and headers (using CSS variables or Tailwind utility classes like `pb-[env(safe-area-inset-bottom)]`, `pt-[env(safe-area-inset-top)]`). This ensures UI items are never covered by notch designs, dynamic islands, or iOS home indicators.
+  * *Touch Target Targets*: Ensure all buttons, links, toggles, and form controls have a minimum touch target size of **44x44px** (following Apple's Human Interface Guidelines) to guarantee comfortable touch input on mobile.
+  * *Input Zoom Prevention*: Form text inputs and selects must have a font size of at least `16px` (`text-flox-body`) to prevent iOS Safari from automatically zooming into the field upon focus, which breaks layout scaling.
 - **Component References & Classes**:
   * Utilize standard classes defined in `src/index.css` matching [DESIGN.md](file:///c:/Users/AD/Documents/GitHub/vlinknexora/DESIGN.md):
     * **Buttons**: `.btn-ghost`, `.btn-outline-ghost`, `.btn-primary-action`, `.btn-gradient-cta` (gold-cyan gradient).
@@ -91,10 +96,11 @@ Before declaring a Front-End task complete, perform these checks:
 3. [ ] Reusability & DRY: Did you reuse existing shared UI components (e.g. `CustomSelect`) instead of creating inline, duplicated elements?
 4. [ ] Token Compliance: Do all styles (colors, fonts, spaces, border-radii) follow [DESIGN.md](file:///c:/Users/AD/Documents/GitHub/vlinknexora/DESIGN.md) without arbitrary values?
 5. [ ] Class Reuse: Did you reuse pre-defined UI classes like `.btn-primary-action` or `.card-elevated` instead of duplicating styles?
-6. [ ] Prop & Data validation: Are React props documented, and is state correctly separated (Query vs Zustand)?
-7. [ ] Security Check: Are there any un-sanitized dynamic HTML bindings or exposed secret keys?
-8. [ ] Compilation: Does running the build command compile the application cleanly without errors?
-9. [ ] Self-Criticism: Did you review the code changes for simplicity, single responsibility, edge cases, and clean imports?
+6. [ ] Responsive & Mobile First: Does the UI follow a Mobile-First layout, include Safe Area Insets, and have a minimum 44x44px touch target on interactive components?
+7. [ ] Prop & Data validation: Are React props documented, and is state correctly separated (Query vs Zustand)?
+8. [ ] Security Check: Are there any un-sanitized dynamic HTML bindings or exposed secret keys?
+9. [ ] Compilation: Does running the build command compile the application cleanly without errors?
+10. [ ] Self-Criticism: Did you review the code changes for simplicity, single responsibility, edge cases, and clean imports?
 
 
 
