@@ -27,6 +27,19 @@ Streamlines the creation and editing of graphical assets and illustrations insid
 - **Illustrative Graphics Generation**: Assists in designing and positioning mockups and icons.
 - **Background Removal**: Integrates steps to clean up graphics, ensuring transparency and clean layer boundaries.
 
+### 4. 🧪 Feature-Focused Tester (`feature-focused-tester`)
+Plans, writes, and executes automated tests specifically targeted at modified features.
+- **Change Detection**: Analyzes git diffs to detect what source files changed and suggests relevant test files.
+- **Token Compliance Audit**: Runs static checks in JS/React code to flag inline hex colors or non-theme Tailwind classes.
+- **Targeted Testing**: Runs Vitest unit tests only on changed/related files, and launches Playwright + CloakBrowser for hermetic end-to-end user-flow verification.
+
+### 5. 🛡️ Frontend Code Standards (`frontend-code-standards`)
+Enforces strict coding standards, security controls, and design-to-dev synchronization.
+- **Atomic Design Alignment**: Standardizes components into Atoms, Molecules, Organisms, Templates, and Pages for seamless sync between Figma design files and Dev files.
+- **DRY & Component Reusability**: Mandates that any UI element used on 2 or more pages must be extracted to a shared directory (`src/components/ui/` or `src/components/common/`) to avoid inline duplicate styling.
+- **Client-Side Security**: Checks for XSS vulnerabilities (enforcing sanitization before `dangerouslySetInnerHTML`), hardcoded secrets (requiring `import.meta.env.VITE_*`), and console logs audits.
+- **Architectural Constraints**: Restricts component files to under 500 lines of code, limits prop drilling to 3 layers, and separates server state (TanStack Query) from client UI state (Zustand).
+
 ---
 
 ## 🛠️ How to Use
@@ -47,3 +60,4 @@ C:\Users\<YourUsername>\.gemini\config\plugins\
 ```
 
 Each directory contains a `plugin.json` which lists the available commands/skills, and a `skills/SKILL.md` instruction sheet that the agent reads before performing tasks.
+
