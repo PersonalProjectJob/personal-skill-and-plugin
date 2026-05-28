@@ -58,12 +58,18 @@ Ensure components align with the project design architecture and reusable patter
   * **Color Palette**: Strictly use `luxuryBlack` (`#050505`), `luxuryCoal` (`#11100d`), `luxuryGold` (`#d4af37`), `brandCyan` (`#32D7FF`), `inkBlue` (`#0B1C30`), `mutedGrey` (`#565E74`), and their semantic mappings.
   * **Typography Scale**: Use classes prefixed with `text-flox-*` (e.g., `text-flox-body`, `text-flox-heading`). Font families are GeistSans (or Inter) and GeistMono for logs/payment IDs.
   * **No Arbitrary Styling**: Do NOT use hardcoded hex colors or arbitrary Tailwind values. Do not use generic classes like `rounded-md` or `rounded-xl`; instead, use `rounded-flox-inputs` (6px) or `rounded-flox-cards` (12px).
-- **Mobile-First & Apple Responsive Standards (HIG Compliant)**:
+- **Mobile-First & Apple Responsive Standards (Apple HIG & Safe Zone Rules)**:
   * *Mobile-First Styling*: Write base CSS/Tailwind classes for mobile layout first (e.g., full width `w-full`, vertical stacks `flex-col`). Use Tailwind's `min-width` responsive prefixes (e.g. `md:flex-row`, `lg:w-1/2`) to build up complexity for desktop screens. Do NOT write desktop-first styles overridden by `max-width` queries.
-  * *Safe Area Insets*: Apply Safe Area spacing variables on layout roots, floating buttons, bottom navbars, and headers (using CSS variables or Tailwind utility classes like `pb-[env(safe-area-inset-bottom)]`, `pt-[env(safe-area-inset-top)]`). This ensures UI items are never covered by notch designs, dynamic islands, or iOS home indicators.
+  * *Viewport Configuration*: Ensure the HTML viewport meta tag in `index.html` includes `viewport-fit=cover` (e.g. `<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">`). Without `viewport-fit=cover`, Apple devices will letterbox the content and CSS safe-area environment variables (`env(safe-area-inset-*)`) will resolve to `0`.
+  * *Safe Zone Insets (Safe Area)*: Interactive controls, navigation, and vital text must never overlap Apple's device safe areas (notch/sensor housing, Dynamic Island, or the bottom home indicator pill). Use:
+    * `env(safe-area-inset-top)` for fixed headers, banners, or status bars.
+    * `env(safe-area-inset-bottom)` for bottom navbars, floating action buttons, and fixed footers.
+    * `env(safe-area-inset-left)` and `env(safe-area-inset-right)` to handle iPhone landscape layouts, iPad multitasking splits, or side menus.
+  * *Background Bleeding vs Content Insets*: Background fills, graphics, and overlay containers must extend (bleed) to the physical edges of the display (filling the safe area). However, the actual text, icons, and buttons must be padded inward using safe area variables (e.g., `pb-[env(safe-area-inset-bottom)]`, `pt-[env(safe-area-inset-top)]`).
   * *Touch Target Targets*: Ensure all buttons, links, toggles, and form controls have a minimum touch target size of **44x44px** (following Apple's Human Interface Guidelines) to guarantee comfortable touch input on mobile.
   * *Input Zoom Prevention*: Form text inputs and selects must have a font size of at least `16px` (`text-flox-body`) to prevent iOS Safari from automatically zooming into the field upon focus, which breaks layout scaling.
 - **Component References & Classes**:
+
   * Utilize standard classes defined in `src/index.css` matching [DESIGN.md](file:///c:/Users/AD/Documents/GitHub/vlinknexora/DESIGN.md):
     * **Buttons**: `.btn-ghost`, `.btn-outline-ghost`, `.btn-primary-action`, `.btn-gradient-cta` (gold-cyan gradient).
     * **Cards & Containers**: `.card-elevated` (glass effect + shadow), `.card-code-block` (monospace container), `.bordered-list-item`.
