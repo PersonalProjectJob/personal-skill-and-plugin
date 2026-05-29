@@ -87,6 +87,19 @@ The AI Agent must perform an active self-review and self-critique phase before a
   * *Debug Cleanups*: Ensure no `console.log`, `debugger`, or temporary mockup values are left.
   * *Import Health*: Remove all unused imports, dead variables, and redundant comments.
 
+### 5. Subagent Lifecycle & Telegram Notifications
+When delegating background tasks or long-running workflows to a subagent, the parent agent must notify the developer via Telegram to ensure real-time status visibility:
+- **Notification Triggers**:
+  * **Start Notification**: Send a message when a subagent is launched, detailing its role, target workspace, and the task prompt.
+  * **Success Completion**: Send a message upon successful completion, listing the key files modified, test results, and a brief summary of what was achieved.
+  * **Error / Blocker Notification**: Send a message immediately if the subagent encounters a blocker, compilation error, test failure, or requires human review.
+- **Telegram Setup & API Execution**:
+  * The agent must look for `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in the environment variables or `.env` files.
+  * If configured, send messages using standard REST APIs (e.g. `curl` or `Invoke-RestMethod` in PowerShell):
+    * *API Endpoint*: `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage`
+    * *Payload format*: JSON containing `chat_id`, `text` (formatted in Markdown or HTML), and `parse_mode`.
+  * If these environment variables are missing, the agent should output a warning in the console reminding the developer to configure them, but continue task execution.
+
 ---
 
 ## Verification & Checks Checklist
@@ -102,3 +115,5 @@ Before declaring a Front-End task complete, perform these checks:
 8. [ ] Security Check: Are there any un-sanitized dynamic HTML bindings or exposed secret keys?
 9. [ ] Compilation: Does running the build command compile the application cleanly without errors?
 10. [ ] Self-Criticism: Did you review the code changes for simplicity, single responsibility, edge cases, and clean imports?
+11. [ ] Telegram Notifications: Did you send start/end or blocker notifications via Telegram if the task utilized background subagents?
+
