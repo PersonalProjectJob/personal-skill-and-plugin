@@ -38,14 +38,22 @@ Create or update a `test_plan.md` artifact outlining:
 ### 4. Write/Update Tests
 - **Unit Tests**: Save under the project's unit test directories (e.g., `tests/unit/` or component folders) using standard testing frameworks (Vitest, Jest) and Testing Library. Ensure proper usage of mock context providers (e.g. language/translation contexts).
 - **E2E Tests**: Save under the E2E directory (e.g., `tests/e2e/`) using E2E browsers (Playwright, Cypress, CloakBrowser). Ensure network boundaries are mocked or handled hermetically, and use localized strings (using translation files) or flexible, text-agnostic locators.
+- **Strict Test isolation**: Do NOT mix unrelated test flows in a single file if possible. Create a dedicated test file for the specific feature under test (e.g., `tests/e2e/setupWizard.test.js` or `tests/e2e/settingsView.test.js`) rather than putting everything into a default dashboard test file.
 
 ### 5. Execute Tests (Targeted Run)
-- **Unit Tests (Targeted)**: Run unit tests on only the related files to minimize execution time:
-  - Run the test suite targeting only the changed paths.
-- **E2E Tests (Targeted)**: Start the local dev server and run the E2E configuration specifically for the newly created or modified E2E test file.
+- **Strict Targeted Run Rule**: The Agent must ONLY run the tests (Unit and E2E) that directly cover the modified or new code files.
+  * **Do NOT Run Default Unrelated Tests**: For example, if the modifications are on the **Merchant Dashboard, Setup Wizard, or Settings**, the Agent must NOT execute E2E tests for the **Customer Tipping Flow** (like tips, reviews, ratings) unless the tipping flow itself was modified. Running unrelated default tests is a quality failure.
+  * **Unit Tests (Targeted)**: Run vitest on only the related/changed files:
+    `npx vitest run --related <comma-separated-changed-files>`
+  * **E2E Tests (Targeted)**: Start the local dev server and execute E2E tests specifically targeting either the specific test file or using the `-t` (test name pattern) flag:
+    * *Targeted by file*:
+      `npx start-server-and-test dev http://localhost:3000 "npx vitest run --config vitest.e2e.config.js tests/e2e/setupWizard.test.js"`
+    * *Targeted by test name pattern (`-t`)*:
+      `npx start-server-and-test dev http://localhost:3000 "npx vitest run --config vitest.e2e.config.js -t 'SSO Login'"`
 
 ### 6. Report & Walkthrough
 Create a `walkthrough.md` artifact summarizing:
 - All executed test suites and results.
 - Screenshots of the browser run if visual checks are done (saved under the artifacts directory).
 - Code diffs of the test implementation.
+
