@@ -57,3 +57,17 @@ Create a `walkthrough.md` artifact summarizing:
 - Screenshots of the browser run if visual checks are done (saved under the artifacts directory).
 - Code diffs of the test implementation.
 
+### 7. Telegram Notifications (QA/QC & PM Notification Workflow)
+To keep the team informed of testing status, automated builds, and subagent progress, the QA/QC (Tester) and PM roles must trigger Telegram notifications:
+- **Notification Triggers**:
+  * **Test Run Start**: Send a message when an automated test run, E2E test, or CI check is initiated.
+  * **Test Run Completion**: Send a summary of test results (Passed/Failed counts) once execution completes.
+  * **Critical Test Failures / Blockers**: Send immediate alerts with error snippets if tests fail, builds break, or a subagent encounters a blocker.
+- **API Execution**:
+  * The bot token and chat ID must be retrieved from the `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` environment variables or `.env` files.
+  * Notifications must be sent via a REST POST call to the Telegram API:
+    * *Endpoint*: `https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/sendMessage`
+    * *Payload*: JSON with `chat_id`, `text` (formatted with Markdown/HTML), and `parse_mode`.
+  * If the variables are missing, the agent outputs a warning but continues running tests.
+
+
