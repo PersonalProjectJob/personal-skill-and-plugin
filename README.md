@@ -1,9 +1,10 @@
-# Agentic Skills for AI Coding Agents — Figma automation + multi-agent orchestration
+# Agentic Skills for AI Coding Agents — frontend, WebGL + multi-agent orchestration
 
-Two families of skills for AI coding assistants (Antigravity, Claude, Codex):
+Three families of skills for AI coding assistants (Antigravity, Claude, Codex):
 
 1. **Figma / frontend automation** (skills 1–8) — interface with Figma through the **figma-console MCP server**, enabling the agent to act as a senior UI/UX designer and design system engineer: design-system extraction, component-driven assembly, asset cleaning, and frontend test/standards enforcement.
-2. **Multi-agent orchestration** (skill 9, `skill-principal`) — not Figma-related and needs no MCP server. A file-based layer for running several coding agents in parallel on one codebase without them colliding, losing work when a session dies, or being believed when they report "done".
+2. **Agent execution and orchestration** (skills 9–11) — file-based routing, browser evidence setup, and cross-reviewed multi-agent execution without a required MCP server.
+3. **Web architecture and graphics** (skill 12, `webgl-art`) — builds artistic HTML/WebGL experiences with React or Angular integration while preserving fallbacks, lifecycle ownership, and measurable performance.
 
 ---
 
@@ -105,6 +106,14 @@ Runs a *team* of coding agents against a single task and makes them argue, inste
 - **Isolation is probed, never assumed**: N agents editing the same file without real isolation is the worst failure shape there is — clean merge, green typecheck, no red anywhere, wrong data. The skill teaches you to probe your harness's isolation flag and degrade the team shape if the probe fails, rather than naming a flag that will be renamed next quarter.
 - **Documents a failure mode it tested and disproved**: the design's original premise — that agents would let candidates vote on their own work — was checked against a no-guidance baseline and turned out **false**. That baseline is also where the blind-spec-author mechanism and the "just read the diffs" gate came from. Both of the skill's best ideas came from testing before writing, and the disproved premise is recorded so nobody writes a rule for a bug that doesn't happen.
 
+### 12. ✨ WebGL Art — HTML Runtime with React and Angular Hosts (`webgl-art`)
+Builds reusable artistic websites around a semantic HTML experience and a separately owned WebGL runtime. It supports direct canvas integration or a persistent iframe bridge while keeping application state and navigation in the host framework.
+- **Framework-aware boundaries**: connects to Angular or React conventions without forcing either framework into the render loop. Included bridge guides cover lifecycle ownership, Strict Mode, Angular change detection, validated messages, and cleanup.
+- **Progressive visual enhancement**: keeps headings, navigation, forms, and primary actions usable before the renderer starts or when WebGL is unavailable.
+- **Performance controls**: defines one scheduler per renderer, visibility pause/resume, reduced-motion behavior, adjustable quality tiers, bounded DPR, and measurement-based optimization.
+- **Reusable content contract**: separates authored scene/content data from rendering code so future portfolio or campaign pages can add sections and assets without rewriting the host protocol.
+- **Tested bridge starter**: ships a dependency-free message bridge and Node test suite for origin, source, schema, revision, and disposal behavior.
+
 ---
 
 ## 🛠️ How to Use
@@ -117,6 +126,8 @@ Runs a *team* of coding agents against a single task and makes them argue, inste
 
 **For `skill-principal` (9), `e2e-setup` (10) and `agent-team` (11):** none of the above. All three are plain markdown plus a handful of scripts, and work with any agent that reads skill files or runs Bash. For `skill-principal`, run `/model-audit` once after copying it in — the capability profile ships with the dates *its author* last verified, not the day you downloaded it. For `e2e-setup`, run its probe (`bin/e2e-probe.mjs`) once against your repo to confirm it finds a browser + runner before relying on it. For `agent-team`, run its Step 0 isolation probe once against your harness before promising anyone the competing-candidates tier — the flag existing in your harness's docs is not proof it works.
 
+**For `webgl-art` (12):** no framework is required for a standalone HTML/WebGL page. Install the companion `angular-frontend` or `frontend-developer` skill when the target uses that framework. Node.js is only needed to run the included bridge tests.
+
 ### Installation for Gemini/Claude Agents
 Copy the desired plugin folder(s) directly into your agent's config or project plugins directory:
 
@@ -128,5 +139,5 @@ C:\Users\<YourUsername>\.gemini\config\plugins\
 <your-project-root>\.agents\skills\
 ```
 
-Each directory contains a `plugin.json` which lists the available commands/skills, and a `skills/SKILL.md` instruction sheet that the agent reads before performing tasks.
+Each directory contains a root `plugin.json` for existing agent compatibility. Codex-ready packages also include `.codex-plugin/plugin.json`. Skill instructions live under `skills/<skill-name>/SKILL.md`.
 
