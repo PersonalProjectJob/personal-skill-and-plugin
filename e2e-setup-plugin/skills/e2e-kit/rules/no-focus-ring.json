@@ -1,0 +1,13 @@
+{
+  "id": "NO-FOCUS-RING",
+  "description": "Phần tử tương tác không đổi outline/box-shadow ở trạng thái :focus-visible",
+  "scope": "element",
+  "selector": "a[href], button, input:not([type=\"hidden\"]), select, textarea, summary, [role=\"button\"], [role=\"link\"], [tabindex]:not([tabindex=\"-1\"])",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "fact": "focusRingSuppressed", "op": "truthy" },
+      { "fact": "focusRingDeclared", "op": "falsy" }
+    ]
+  }
+}

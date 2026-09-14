@@ -1,0 +1,5 @@
+{
+  "name": "plan-doc-plugin",
+  "version": "1.0.0",
+  "description": "Three-part implementation-plan flow — product-design-doc (Persona/Scenario/Audit/Solution/User Flow/Wireframe) -> engineering-doc (solution vs codebase, technical design, To-Do) -> qa-doc (test cases). One document, ten sections in order, before any code is written."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "TOUCH-TARGET-44",
+  "description": "Vùng chạm nhỏ hơn 44×44 CSS px (chỉ chấm trên mobile/tablet)",
+  "scope": "element",
+  "viewports": ["mobile", "tablet-portrait", "tablet-landscape"],
+  "selector": "a[href], button, input:not([type=\"hidden\"]), select, textarea, summary, [role=\"button\"], [role=\"link\"], [role=\"tab\"], [role=\"checkbox\"], [role=\"switch\"], [role=\"menuitem\"]",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      {
+        "any": [
+          { "fact": "rect:width", "op": "lt", "value": 44 },
+          { "fact": "rect:height", "op": "lt", "value": 44 }
+        ]
+      }
+    ]
+  }
+}

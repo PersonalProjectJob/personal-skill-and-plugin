@@ -1,0 +1,12 @@
+{
+  "id": "NO-ACCESSIBLE-NAME",
+  "description": "Phần tử tương tác thiếu accessible name",
+  "scope": "element",
+  "selector": "button, a, input[type=\"button\"], input[type=\"submit\"]",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "fact": "accessibleName", "op": "empty" }
+    ]
+  }
+}

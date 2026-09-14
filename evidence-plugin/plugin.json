@@ -1,0 +1,5 @@
+{
+  "name": "evidence-plugin",
+  "version": "1.0.0",
+  "description": "Execute E2E flows/test-cases on a workspace already provisioned by e2e-setup-plugin, gather PASS/FAIL evidence organized by severity, auto-circle the failing element on screenshots, verify business logic at the network layer (expectRequest), run Adventure Mode to map an unfamiliar site, bundle/publish results to a GitHub Release, and log them to a durable cross-task, cross-worktree log. Board/tracker coupling (issue Status → deployed/selftest mode) and the log's output path are read from .agent-rules.local, never hardcoded."
+}

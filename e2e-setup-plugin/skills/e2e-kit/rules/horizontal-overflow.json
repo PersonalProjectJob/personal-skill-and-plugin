@@ -1,0 +1,10 @@
+{
+  "id": "HORIZONTAL-OVERFLOW",
+  "description": "Tràn chiều ngang viewport",
+  "scope": "document",
+  "match": {
+    "all": [
+      { "fact": "doc:overflowX", "op": "gt", "value": 2 }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "github-issues-plugin",
+  "version": "1.0.0",
+  "description": "Create GitHub issues — standalone or decomposed from a PR — and land them on a GitHub Projects (v2) board with every field set correctly. Board field/option IDs are resolved live by name every run (never hardcoded), so this works on any Projects v2 board, not one specific board's copy-pasted GraphQL IDs. Parent+child via the sub-issues API, Item-Type-driven default status, PR-base-branch-driven Environment. Issue wording/evidence/sizing rules are read from companion agent-rules files, not duplicated here."
+}

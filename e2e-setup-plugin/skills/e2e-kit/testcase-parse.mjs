@@ -29,6 +29,7 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve as resolvePath } from 'node:path'
+import { spawnSync } from 'node:child_process'
 
 const argv = process.argv.slice(2)
 const args = {}
@@ -120,6 +121,57 @@ if (category) {
   category = 'functional'
 }
 
+// --- Issue reference (tuỳ chọn) — quyết định mode selftest/deployed --------
+// Status "Testing" trên board GitHub Project nghĩa là dev đã deploy xong lên
+// môi trường ghi trong ticket, QC cần verify trên ĐÚNG môi trường đó — không
+// phải sourcecode cục bộ. Mọi Status khác (kể cả "In Progress") coi là
+// selftest: chưa tới lúc QC verify trên môi trường thật.
+// --issue-repo là bắt buộc để bật chế độ đọc issue status (không có default
+// hardcode — mỗi board thuộc một owner/repo khác nhau); thiếu flag thì bỏ
+// qua bước tra issue status, coi như selftest.
+const ISSUE_REPO = args['issue-repo'] ? String(args['issue-repo']) : null
+const issueRaw = findMeta('issue')
+let issue = null
+let issueStatus = null
+let mode = 'selftest'
+if (issueRaw) {
+  const m = /^#?(\d+)$/.exec(issueRaw.trim())
+  if (!m) {
+    warnings.push(`Issue "${issueRaw}" không parse được thành số — bỏ qua, coi như không có issue (mode selftest)`)
+  } else if (!ISSUE_REPO) {
+    issue = Number(m[1])
+    warnings.push(`Có issue #${issue} nhưng thiếu --issue-repo — bỏ qua tra Status, fallback mode selftest.`)
+  } else {
+    issue = Number(m[1])
+    const ghResult = spawnSync('gh', ['issue', 'view', String(issue), '--repo', ISSUE_REPO, '--json', 'projectItems'], {
+      encoding: 'utf8',
+      timeout: 15000,
+    })
+    if (ghResult.error || ghResult.status !== 0) {
+      warnings.push(
+        `Không tra được Status của issue #${issue} qua "gh" (${
+          ghResult.error?.message || ghResult.stderr?.trim() || `exit ${ghResult.status}`
+        }) — fallback mode selftest, KHÔNG chặn cứng.`,
+      )
+    } else {
+      try {
+        const parsed = JSON.parse(ghResult.stdout)
+        issueStatus = parsed.projectItems?.[0]?.status?.name || null
+        if (issueStatus === 'Testing') mode = 'deployed'
+      } catch (err) {
+        warnings.push(`Output "gh issue view" cho #${issue} không parse được (${err.message}) — fallback mode selftest.`)
+      }
+    }
+  }
+}
+
+if (mode === 'deployed' && !environment) {
+  fail(
+    `Issue #${issue} đang Status=Testing (mode deployed) nhưng thiếu Environment trong test case — ` +
+      `bắt buộc khai rõ môi trường trước khi chạy.`,
+  )
+}
+
 // --- bảng bước: tìm header có "Bước"/"Step" + "mong đợi"/"expected" --------
 function splitRow(line) {
   return line
@@ -170,6 +222,9 @@ const result = {
   route,
   severity,
   category,
+  issue,
+  issueStatus,
+  mode,
   steps,
   warnings: warnings.length ? warnings : undefined,
 }

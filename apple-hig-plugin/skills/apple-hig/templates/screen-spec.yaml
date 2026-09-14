@@ -1,0 +1,60 @@
+// One block per screen. Delete nothing — an empty key is a question, a missing key is an oversight.
+
+screen:
+  id: ""
+  name: ""
+  purpose: ""
+  entry_points: []
+  exit_points: []
+  primary_action: ""
+  secondary_actions: []
+  content_sections: []
+
+  system_components: []          # what the platform provides and you are using
+  custom_components: []          # each needs the custom component gate satisfied
+
+  states:                        # every data-fetching screen declares all of these
+    - initial_loading
+    - refreshing
+    - content
+    - empty
+    - partial_content
+    - recoverable_error
+    - blocking_error
+    - offline
+    - permission_denied
+
+  adaptive_behavior:
+    compact:                     # iPhone, iPad 1/3 Split View, narrow window
+      navigation: ""             # stack | tabs
+      columns: 1
+      toolbar: ""                # which actions stay visible, which move to overflow
+      modality: ""               # sheet detent, or full-screen
+    regular:                     # iPad landscape, Mac window, wide browser
+      navigation: ""             # split | sidebar + detail
+      columns: 0
+      toolbar: ""
+      modality: ""               # smaller detent, popover, or inspector
+    text_scaling:
+      wraps: true
+      fixed_text_container_height: false
+      collapses_columns_at_accessibility_size: true
+    occlusion:
+      content_respects_safe_area: true
+      background_may_extend: true
+      keyboard_avoidance: ""     # how the focused field and its submit stay visible
+    pointer:
+      hover_states: ""           # allowed, but never the only affordance
+      touch_target_min: "44x44 pt"
+
+  accessibility:
+    heading: ""
+    focus_order: []
+    announcements: []
+    labels: []                   # every icon-only control appears here
+    gesture_alternatives: []
+
+  analytics_events: []
+  acceptance_criteria: []
+
+  provenance_notes: []           # values tagged Project decision or Assumption, and why

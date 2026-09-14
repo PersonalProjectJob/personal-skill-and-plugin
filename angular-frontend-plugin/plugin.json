@@ -1,0 +1,5 @@
+{
+  "name": "angular-frontend-plugin",
+  "version": "1.0.0",
+  "description": "Build, fix, refactor, and review Angular frontend applications — components, templates, dependency injection, Signals/RxJS, HTTP, forms, routing, and tests. Guidance matched to the installed Angular version, not one fixed release."
+}

@@ -1,0 +1,30 @@
+# .agent-rules.local.example — per-project config for create-issue / create-pr-issues
+#
+# Copy to `.agent-rules.local` at your repo root and fill in what applies. If you already
+# have one (e.g. from skill-principal), add these lines to it instead of creating a second file.
+# All are OPTIONAL — SKILL.md documents the fallback for each. The skill asks for anything
+# it needs and doesn't find here, then WRITES your answer back into this file (creating it
+# from this `.example` if it doesn't exist yet) so it doesn't ask again next time.
+
+# Org or user that owns the GitHub Project (v2) board.
+GH_OWNER=<org or user login>
+
+# Project (v2) number — the number in the project's URL.
+GH_PROJECT_NUMBER=<project number>
+
+# Repo where PRs/code live.
+GH_REPO_CODE=<owner>/<repo>
+
+# OPTIONAL — repo where issues live, if different from GH_REPO_CODE (some teams split a
+# code repo with restricted access from an issues repo everyone can see). Unset -> same
+# as GH_REPO_CODE, and every issue/PR cross-reference can use a bare `#N`.
+GH_REPO_ISSUES=<owner>/<repo>
+
+# Primary assignee for self-verified work (Dev-Task-tier items and similar).
+GH_ASSIGNEE_PRIMARY=<github username>
+
+# OPTIONAL — a second assignee added to items that need independent verification before
+# they're done (parent/Task-tier items). Unset -> the skill assigns only GH_ASSIGNEE_PRIMARY
+# everywhere and skips the dual-assignee rule entirely (fine for a solo dev or small team
+# with no separate reviewer role).
+GH_ASSIGNEE_REVIEWER=<github username, or leave unset>

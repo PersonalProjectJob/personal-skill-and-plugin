@@ -1,0 +1,12 @@
+# Copy to .agent-rules.local (gitignored) and fill in. Both variables are optional —
+# the skill degrades gracefully and, on first need, asks once and writes the answer
+# back into .agent-rules.local so future runs don't ask again.
+
+# Absolute path OUTSIDE any git worktree where the cross-task manager log
+# (LOG.md + thumbs/) accumulates. Must survive `git worktree remove`.
+E2E_LOG_ROOT=<absolute path outside any repo/worktree, e.g. ~/e2e-evidence-log>
+
+# owner/repo of the issue tracker used by Mode 2's "Issue:" field, passed as
+# --issue-repo to testcase-parse.mjs. Same variable as github-issues-plugin's
+# GH_REPO_ISSUES — reuse that value if you already have it configured there.
+GH_REPO_ISSUES=<owner>/<repo>

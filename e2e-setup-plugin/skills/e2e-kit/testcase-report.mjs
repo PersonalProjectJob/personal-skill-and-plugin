@@ -30,7 +30,9 @@
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve as resolvePath } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { basename, dirname, join, resolve as resolvePath } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const argv = process.argv.slice(2)
 const args = {}
@@ -76,7 +78,88 @@ try {
 }
 
 const verdict = run.verdict || 'UNKNOWN'
-const passed = verdict === 'FLOW_VERIFIED'
+
+/**
+ * Gate nghiệp vụ NGOÀI phạm vi flow.mjs: issue đang Status=Testing (mode
+ * "deployed", gán bởi testcase-parse.mjs) bắt buộc phải test trên target
+ * kind "url" — flow.mjs tự nó không biết gì về Status của issue nên không
+ * thể tự chặn; test case FAIL ở đây dù flow.mjs báo FLOW_VERIFIED.
+ */
+let modeMismatchReason = null
+if (testcase.mode === 'deployed' && run.target && run.target.kind !== 'url') {
+  modeMismatchReason =
+    `Issue #${testcase.issue} đang Status=Testing (mode deployed) nhưng flow chạy với target kind="${run.target.kind}" — ` +
+    `phải test trên môi trường đã deploy (URL), không phải cục bộ.`
+}
+const passed = modeMismatchReason ? false : verdict === 'FLOW_VERIFIED'
+const effectiveVerdict = modeMismatchReason ? 'MODE_MISMATCH' : verdict
+
+/**
+ * Case FAIL: gom dữ liệu đúng thời điểm lỗi, ghi DEBUG.json và gọi annotate
+ * khi locator có bounding box. Mọi lỗi ở nhánh bổ trợ này đều được giữ trong
+ * summary, không được làm mất verdict gốc của test case.
+ */
+function buildDebugEvidence(runResult) {
+  if (passed) return undefined
+  const failedStep = (runResult.steps || []).find((step) => step.status === 'fail')
+  if (!failedStep) return undefined
+
+  const summary = {}
+  if (failedStep.networkRecentAtFailure?.length) {
+    const last = failedStep.networkRecentAtFailure.at(-1)
+    summary.network = `${last.method} ${last.url} → ${last.status ?? '(chưa có response)'}`
+  }
+  if (failedStep.consoleErrorsAtFailure?.length) {
+    summary.console = `${failedStep.consoleErrorsAtFailure.length} lỗi JS`
+  }
+  if (!failedStep.failureShot) return Object.keys(summary).length ? summary : undefined
+
+  const debugPath = join(dirname(failedStep.failureShot), `${basename(failedStep.failureShot, '.png')}-DEBUG.json`)
+  try {
+    writeFileSync(
+      debugPath,
+      JSON.stringify(
+        {
+          step: { i: failedStep.i, verb: failedStep.verb, error: failedStep.error },
+          consoleErrors: failedStep.consoleErrorsAtFailure || [],
+          pageErrors: failedStep.pageErrorsAtFailure || [],
+          networkRecent: failedStep.networkRecentAtFailure || [],
+        },
+        null,
+        2,
+      ) + '\n',
+      'utf8',
+    )
+    summary.debugFile = debugPath
+  } catch (err) {
+    summary.debugFileError = err.message
+  }
+
+  if (failedStep.failureBoundingBox) {
+    const annotateScript = join(dirname(fileURLToPath(import.meta.url)), 'annotate.mjs')
+    const regions = JSON.stringify([{ ...failedStep.failureBoundingBox, label: failedStep.verb }])
+    const child = spawnSync(process.execPath, [annotateScript, '--image', failedStep.failureShot, '--regions', regions], {
+      encoding: 'utf8',
+      timeout: 30000,
+      maxBuffer: 1024 * 1024,
+    })
+    if (child.error) {
+      summary.annotateError = child.error.message
+    } else {
+      try {
+        const out = JSON.parse(child.stdout)
+        if (out.ok && out.annotated) summary.annotatedImage = out.annotated
+        else if (!out.ok) summary.annotateError = out.error || 'annotate.mjs thất bại'
+      } catch {
+        summary.annotateError = child.stderr?.trim() || 'annotate.mjs không trả JSON hợp lệ'
+      }
+    }
+  }
+
+  return Object.keys(summary).length ? summary : undefined
+}
+
+const debug = buildDebugEvidence(run)
 
 const entry = {
   id: testcase.id || testcase.title || '(không tên)',
@@ -87,11 +170,13 @@ const entry = {
   severity: testcase.severity || 'medium',
   category: testcase.category || 'functional',
   stepsDeclared: Array.isArray(testcase.steps) ? testcase.steps.length : null,
-  verdict,
+  verdict: effectiveVerdict,
   passed,
+  modeMismatchReason: modeMismatchReason || undefined,
   runPath,
   sourceFile: testcase.sourceFile || null,
   checkedAt: new Date().toISOString(),
+  debug,
 }
 
 // --- ghi tích luỹ, KHÔNG ghi đè kết quả cũ của test case khác ---------------
@@ -111,7 +196,7 @@ else results.push(entry)
 
 writeFileSync(resultsPath, JSON.stringify(results, null, 2) + '\n', 'utf8')
 
-console.log(`${passed ? '✅ PASS' : '❌ FAIL'} — ${entry.id}: ${verdict}`)
+console.log(`${passed ? '✅ PASS' : '❌ FAIL'} — ${entry.id}: ${entry.verdict}`)
 console.log(JSON.stringify({ ok: true, entry, resultsFile: resultsPath, totalRecorded: results.length }, null, 2))
 
 // --- render bảng tổng hợp (tuỳ chọn) ---------------------------------------
@@ -141,10 +226,22 @@ if (args.render) {
     '',
     '| Kết quả | ID | Tiêu đề | Severity | Category | Feature | Route |',
     '|---|---|---|---|---|---|---|',
-    ...sorted.map(
-      (r) =>
-        `| ${r.passed ? '✅' : '❌'} | ${r.id} | ${r.title || '—'} | ${r.severity} | ${r.category} | ${r.feature || '—'} | ${r.route || '—'} |`,
-    ),
+    ...sorted.map((r) => {
+      const resultCell =
+        r.passed || !r.debug
+          ? r.passed
+            ? '✅'
+            : '❌'
+          : [
+              '❌',
+              [r.debug.network, r.debug.console].filter(Boolean).map((value) => `_${value}_`).join(' · '),
+              r.debug.annotatedImage ? `[ảnh đã khoanh](${r.debug.annotatedImage})` : null,
+              r.debug.debugFile ? `[chi tiết](${r.debug.debugFile})` : null,
+            ]
+              .filter(Boolean)
+              .join('<br>')
+      return `| ${resultCell} | ${r.id} | ${r.title || '—'} | ${r.severity} | ${r.category} | ${r.feature || '—'} | ${r.route || '—'} |`
+    }),
     '',
   ].join('\n')
 

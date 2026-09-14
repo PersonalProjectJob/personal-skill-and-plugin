@@ -1,0 +1,16 @@
+﻿{
+  "id": "INPUT-NO-LABEL",
+  "description": "Ô nhập liệu thiếu nhãn label",
+  "scope": "element",
+  "selector": "input, select, textarea",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "not": { "fact": "attr:type", "op": "in", "value": ["hidden", "submit", "button"] } },
+      { "fact": "labelFor", "op": "falsy" },
+      { "fact": "closest:label", "op": "falsy" },
+      { "fact": "attr:aria-label", "op": "empty" },
+      { "fact": "attr:aria-labelledby", "op": "empty" }
+    ]
+  }
+}

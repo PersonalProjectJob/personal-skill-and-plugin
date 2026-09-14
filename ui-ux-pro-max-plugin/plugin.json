@@ -1,0 +1,5 @@
+{
+  "name": "ui-ux-pro-max-plugin",
+  "version": "1.0.0",
+  "description": "A curated UI/UX design-decision engine — 88 visual styles, 192 product/palette/reasoning profiles, 74 font pairings, 119 UX guidelines, 25 chart-type rules, and per-stack (React, Vue, SwiftUI, WPF, Flutter, and 17 more) implementation guidance, queried by a Python search/reasoning layer instead of pasted into the prompt. See ATTRIBUTION.md for third-party data provenance (Google Fonts, Phosphor Icons)."
+}

@@ -1,10 +1,12 @@
-# Agentic Skills for AI Coding Agents — frontend, WebGL + multi-agent orchestration
+# Agentic Skills for AI Coding Agents — frontend, product docs, WebGL + multi-agent orchestration
 
-Three families of skills for AI coding assistants (Antigravity, Claude, Codex):
+Five families of skills for AI coding assistants (Antigravity, Claude, Codex):
 
 1. **Figma / frontend automation** (skills 1–8) — interface with Figma through the **figma-console MCP server**, enabling the agent to act as a senior UI/UX designer and design system engineer: design-system extraction, component-driven assembly, asset cleaning, and frontend test/standards enforcement.
-2. **Agent execution and orchestration** (skills 9–11) — file-based routing, browser evidence setup, and cross-reviewed multi-agent execution without a required MCP server.
-3. **Web architecture and graphics** (skill 12, `webgl-art`) — builds artistic HTML/WebGL experiences with React or Angular integration while preserving fallbacks, lifecycle ownership, and measurable performance.
+2. **Agent execution and orchestration** (skills 9–12) — file-based routing, browser evidence setup + execution, and cross-reviewed multi-agent execution without a required MCP server.
+3. **Web frameworks and graphics** (skills 13–14) — artistic HTML/WebGL experiences and Angular frontend work, each framework-aware without forcing an MCP server or a single stack.
+4. **Product design and documentation** (skills 15–19) — product/UX decision routing, platform design guidelines (Apple HIG), a curated design-decision engine, a Pencil-MCP wireframe→visual-UI workflow, and the shared product→engineering→QA planning-doc flow.
+5. **GitHub workflow automation** (skill 20) — issue creation and Projects (v2) board management with live-resolved field IDs, not board-specific hardcoded ones.
 
 ---
 
@@ -93,11 +95,18 @@ A file-based orchestration layer for running **several AI coding agents in paral
 Gives a coding agent the ability to run a real headless browser and prove it with a real screenshot, in any workspace — a fresh git worktree, a bare folder, a repo whose test scripts are gitignored. Solves a real failure mode: an agent asked for evidence screenshots reports "I'm a text-based AI, I can't run a browser" and returns 0 PNGs, while a different agent on the *same machine* runs Playwright headless without issue — the capability was always there, nobody handed it over with explicit permission.
 - **Discovery ladder, not a guess**: probes host / workspace / target, then climbs a 6-rung ladder (the workspace's own capture script → its `node_modules` → the **main repo's** `node_modules` via absolute path — the rung that saves a fresh worktree from a false "blocked" → machine browser cache → installed Chrome/Edge → an MCP browser server if the host has one) and stops at the first rung that works.
 - **Proof-gated verdict**: `READY` only when a real smoke test exits 0 *and* a PNG exists on disk with a byte size just re-read from disk in the same run — never trust a stale number or a "looks fine" claim.
-- **A separate flow gate for real user journeys** (`flow.mjs`): a smoke test only proves "the browser opened", not "the agent clicked through a real flow". Three constraints are enforced by the engine, not just documented — only real interaction verbs (no state injection), every screenshot needs a proof step since the last one, and a flow needs at least one interaction or it's rejected as a smoke test in disguise. A flow that fails still keeps its screenshots (for debugging) but quarantines them into a `REJECTED/` folder so nobody pastes a failed run into an issue as if it passed.
+- **A separate flow gate for real user journeys** (`flow.mjs`): a smoke test only proves "the browser opened", not "the agent clicked through a real flow". Constraints are enforced by the engine, not just documented — only real interaction verbs (no state injection), every screenshot needs a proof step since the last one, a flow needs at least one interaction or it's rejected as a smoke test in disguise, and a scroll-then-shot needs a viewport-intersection check, not a plain wait. A flow that fails still keeps its screenshots (for debugging) but quarantines them into a `REJECTED/` folder so nobody pastes a failed run into an issue as if it passed. Also verifies business logic at the network layer (`expectRequest`), not just the DOM.
 - **`publish.mjs` — zip evidence to a GitHub Release, no new accounts**: packages a folder of screenshots into a `.zip` and uploads it as a Release asset via the `gh` CLI you're already logged into — chosen over Google Drive/Sheets specifically because those need you to complete an OAuth consent flow in a browser first, which an agent can't do on your behalf. Four small, real bugs got caught and fixed by testing the failure paths, not just the success path: the target repo must be passed explicitly rather than auto-detected from the evidence folder's own git remote (that folder is often a notes vault with a *different* remote — auto-detecting risked silently publishing to the wrong repo); the default release tag rotates by ISO week instead of growing one release forever; non-evidence file extensions are excluded and reported rather than silently dropped, and any filename that looks secret-like (`.env`, `token`, `credential`, `password`...) hard-fails the whole run instead of quietly vanishing; and nothing is ever written into the evidence folder itself — a temp directory holds the zip and any auto-generated manifest, cleaned up after upload.
 - **Written for the "one coding agent is the operator" case**: every script prints one summary line before its JSON so an agent can relay it without parsing, config (storage platform, default environment) is fixed up front instead of asked every run, and every failure message carries the exact next command instead of a bare stack trace.
 
-### 11. 👥 Agent Team — Many Agents on One Task, Cross-Reviewed (`agent-team`)
+### 11. 🕵️ Evidence — Run Tests, Grade PASS/FAIL, Survey Unknown Sites (`evidence`)
+The execution + reporting companion to `e2e-setup` (10): once a workspace has a `READY`/`PARTIAL` verdict, this skill runs the actual flows/test cases against it, decides PASS/FAIL, and explains *why* something failed instead of just showing a red screenshot.
+- **Three modes, one shared engine**: Mode 1 runs a hand-written flow JSON; Mode 2 parses a Markdown test-case file (so QA/PM can write cases without touching JSON), machine-translates it to a flow, and runs it through the exact same `flow.mjs` — no parallel, softer engine for the "easy" input format; Mode 3 (Adventure) crawls a site nobody has mapped yet, in two passes with a human decision gate between them, and is **read-only by design** — it never clicks a button or submits a form, because no heuristic reliably tells "Delete" from "View".
+- **A FAIL comes with a location and a reason**: a failing test case auto-circles the offending element on its screenshot when the locator resolves, and writes a `*-DEBUG.json` with the relevant request/response and console errors at the moment of failure — a reviewer isn't left guessing from a bare red screenshot.
+- **Board coupling is optional and externalized**: a test case's `Issue:` field can auto-detect `deployed` vs. `selftest` mode from a tracker issue's Status, but the tracker repo is a required `--issue-repo` flag / `.agent-rules.local` variable — never a hardcoded org/board, so the same skill works on anyone's Projects board.
+- **A durable, cross-worktree log**: `log-append.mjs` rolls every run into one manager-readable `LOG.md` outside any git worktree (so it survives `git worktree remove`), with real elapsed-time and file-size numbers — and refuses to fabricate a token count or a "worked for Xm Ys" figure it has no way to measure.
+
+### 12. 👥 Agent Team — Many Agents on One Task, Cross-Reviewed (`agent-team`)
 Runs a *team* of coding agents against a single task and makes them argue, instead of trusting one executor. Built for the case where the right approach is genuinely uncertain — an algorithm, a data shape, a gnarly refactor — and the answer is worth paying for two or three attempts.
 - **Opens with two gates, one of which hands the work back to you**: four questions escalate to your full pipeline (money / data integrity / permission / migration / production, or anything needing a ticket, an approved design, or a resource fence). The fifth question is the honest one — *is reading the N diffs directly cheaper than assembling a team?* For a few dozen lines each, it is. A skill that never tells you not to run it is a skill that bills you for ceremony.
 - **Permissions split on two axes, not one**: *can it see the code?* × *can it write?* Nobody but the executor gets both. The reason isn't tidiness — an agent told in prose "report only, do not patch" **will** patch when patching is the fastest route to green. Prose can be reasoned around; a missing tool cannot.
@@ -106,13 +115,58 @@ Runs a *team* of coding agents against a single task and makes them argue, inste
 - **Isolation is probed, never assumed**: N agents editing the same file without real isolation is the worst failure shape there is — clean merge, green typecheck, no red anywhere, wrong data. The skill teaches you to probe your harness's isolation flag and degrade the team shape if the probe fails, rather than naming a flag that will be renamed next quarter.
 - **Documents a failure mode it tested and disproved**: the design's original premise — that agents would let candidates vote on their own work — was checked against a no-guidance baseline and turned out **false**. That baseline is also where the blind-spec-author mechanism and the "just read the diffs" gate came from. Both of the skill's best ideas came from testing before writing, and the disproved premise is recorded so nobody writes a rule for a bug that doesn't happen.
 
-### 12. ✨ WebGL Art — HTML Runtime with React and Angular Hosts (`webgl-art`)
+### 13. ✨ WebGL Art — HTML Runtime with React and Angular Hosts (`webgl-art`)
 Builds reusable artistic websites around a semantic HTML experience and a separately owned WebGL runtime. It supports direct canvas integration or a persistent iframe bridge while keeping application state and navigation in the host framework.
 - **Framework-aware boundaries**: connects to Angular or React conventions without forcing either framework into the render loop. Included bridge guides cover lifecycle ownership, Strict Mode, Angular change detection, validated messages, and cleanup.
 - **Progressive visual enhancement**: keeps headings, navigation, forms, and primary actions usable before the renderer starts or when WebGL is unavailable.
 - **Performance controls**: defines one scheduler per renderer, visibility pause/resume, reduced-motion behavior, adjustable quality tiers, bounded DPR, and measurement-based optimization.
 - **Reusable content contract**: separates authored scene/content data from rendering code so future portfolio or campaign pages can add sections and assets without rewriting the host protocol.
 - **Tested bridge starter**: ships a dependency-free message bridge and Node test suite for origin, source, schema, revision, and disposal behavior.
+
+### 14. 🅰️ Angular Frontend (`angular-frontend`)
+Build, fix, refactor, and review Angular frontend applications — components, templates, dependency injection, Signals/RxJS, HTTP, forms, routing, and tests.
+- **Version-matched guidance**: reads the installed Angular version out of the project instead of assuming a fixed release, so Signals-era and legacy RxJS/NgModule patterns aren't blended into the same recommendation.
+- **Covers the full frontend surface**: component/template authoring, DI, HTTP client usage, reactive and template-driven forms, routing/guards, and the accompanying test conventions — one skill instead of stitching together generic Angular advice.
+- **Companion to `webgl-art` (13)**: when a WebGL/canvas experience needs an Angular host shell, this skill supplies the framework-side conventions the bridge guide assumes.
+
+### 15. 🧭 Product/UX Router (`product-ux`)
+A router for Product/UX decisions — discovery, research, synthesis, interaction specs, solution validation, measurement plans, delivery collaboration, quality-bar decisions, and stakeholder facilitation.
+- **Nine sub-documents, loaded on demand**: the router itself stays small; each sub-area (research methods, interaction-spec conventions, measurement-plan templates, etc.) is a separate file pulled in only when that decision type comes up — not one giant prompt paid for on every invocation.
+- **The agent recommends, the accountable Owner decides**: every sub-document frames its output as input to a human decision, not an autonomous product call — this skill routes and drafts, it doesn't ship a roadmap on its own authority.
+- **Stakeholder facilitation as a first-class output**: alongside research/synthesis, it covers how to structure a decision for review and facilitate the conversation that gets it approved, not just what the decision should be.
+
+### 16. 🍎 Apple HIG (`apple-hig`)
+Design, build, or review UI for Apple platforms — iOS, iPadOS, macOS, or Apple-inspired web — grounded in the Human Interface Guidelines rather than a paraphrase of them.
+- **Adaptive layout by construction**: size classes, Dynamic Type, Dark Mode, safe area, and keyboard avoidance are treated as layout inputs the UI must survive, not an afterthought pass.
+- **Accessibility built in, not bolted on**: VoiceOver labeling and SF Symbols usage are part of the same review pass as visual layout, so an accessible label isn't a separate follow-up task.
+- **Framework-appropriate navigation**: SwiftUI and UIKit navigation conventions are kept distinct, so guidance doesn't default to whichever one the model happened to train on more.
+- **Deliberately kept separate from Material Design guidance** (see `frontend-code-standards` (5) §14 for measurable web-UI thresholds) — mixing the two into one "universal" UI rule set produces guidance that's subtly wrong for both platforms.
+
+### 17. 🖊️ Product Designer — Wireframe → Visual UI via Pencil MCP (`product-designer`)
+A UX/UI design workflow built around Pencil MCP, with a mandatory Design System Audit before any design work and a hard approval gate between wireframe and visual-UI stages.
+- **Audit gates everything downstream**: token/design-system compliance is checked and reported *before* the first wireframe, using a self-contained checklist rather than an external design-system tool.
+- **Two-stage flow with a real approval gate**: wireframes get explicit sign-off before the visual-UI pass starts, so a whole screen doesn't get restyled on top of a structurally wrong wireframe.
+- **Reuse before creating**: checks for an existing component library at a configurable path before creating a new base library, mirroring the "search before you draw" discipline of the Figma skills (1–2).
+- **Config is optional and asked-for-once, not hardcoded**: the product-doc location and the report channel live in `.agent-rules.local` (see `.agent-rules.local.example`) — unset, the skill asks once and writes the answer back for next time, or falls back to sane defaults (`docs/`, an inline report).
+
+### 18. 🐙 GitHub Issues + Projects (v2) (`github-issues`)
+Creates GitHub issues — standalone, or decomposed from a PR — and lands them on a GitHub Projects (v2) board with every field set correctly.
+- **Board field/option IDs are resolved live, every run**, via a single GraphQL query keyed by field *name* — never a copy-pasted, board-specific set of hardcoded GraphQL IDs. The same skill works on any Projects v2 board without modification.
+- **Parent+child via the real sub-issues API**, with an Item-Type-driven default Status and a PR-base-branch-driven Environment field — not a flat list of unrelated issues.
+- **Content rules live in companion `agent-rules` files, not duplicated here**: this skill owns board mechanics only; issue wording, evidence requirements, and sizing gates are read from your project's own rule files so they aren't forked into two diverging copies.
+- **Org/repo/board number and assignees are config, not hardcoded**: `.agent-rules.local.example` documents `GH_OWNER`, `GH_PROJECT_NUMBER`, `GH_REPO_CODE`, `GH_REPO_ISSUES`, and default assignees — unset, the skill asks once and persists the answer.
+
+### 19. 🎨 UI/UX Pro Max — Curated Design-Decision Engine (`ui-ux-pro-max`)
+A curated UI/UX design-decision engine — 88 visual styles, 192 product/palette/reasoning profiles, 74 font pairings, 119 UX guidelines, 25 chart-type rules, and per-stack implementation guidance for 20+ stacks (React, Vue, SwiftUI, WPF, Flutter, and more) — queried by a Python search/reasoning layer instead of pasted whole into the prompt.
+- **Queried, not memorized**: a search engine over the style/palette/font/stack data means the model reasons over a targeted slice of the dataset for the actual request, instead of a huge style guide competing for context budget on every turn.
+- **Decisions come with a stated reason**: palette, font-pairing, and stack guidance are structured as profiles with a rationale field, not just a name to copy — so a choice can be explained, not only applied.
+- **Third-party data, properly attributed**: font data (Google Fonts) and icon data (Phosphor Icons) are pinned to specific upstream commits/versions with license notes and a SHA-256 provenance snapshot — see `ATTRIBUTION.md`.
+
+### 20. 📐 Plan Doc — Product → Engineering → QA (`plan-doc`)
+Three companion skills — `product-design-doc`, `engineering-doc`, `qa-doc` — enforcing one shared plan flow: Persona/Scenario/Audit/Solution/User Flow/Wireframe → solution-vs-codebase technical design and To-Do → test cases, one document with ten sections in order, before any code is written.
+- **Sequenced, not parallel**: engineering-doc is written against the *approved* product-design-doc, and qa-doc is written against the approved engineering-doc — skipping straight to a technical design without an approved product doc is exactly the failure mode this bundle prevents.
+- **Update-vs-create-new is a rule, not a judgment call**: a `## Changelog` section and a documented naming convention (`docs/06-tasks/{ticket}_{desc}_{date}.md`) decide when a new plan doc is warranted versus updating the existing one, so plan docs don't silently fork.
+- **Each doc's own gate stays in its own file**: `qa-doc` covers test-case structure and severity/category taxonomy; it doesn't re-explain what `engineering-doc` already owns, and vice versa — read the one you need, not all three every time.
 
 ---
 
@@ -124,9 +178,13 @@ Builds reusable artistic websites around a semantic HTML experience and a separa
 1. Ensure the **figma-console MCP server** is running and configured in your MCP configuration.
 2. The AI assistant must have access to the `figma-console` tools (`figma_create_child`, `figma_get_variables`, `figma_set_fills`, etc.).
 
-**For `skill-principal` (9), `e2e-setup` (10) and `agent-team` (11):** none of the above. All three are plain markdown plus a handful of scripts, and work with any agent that reads skill files or runs Bash. For `skill-principal`, run `/model-audit` once after copying it in — the capability profile ships with the dates *its author* last verified, not the day you downloaded it. For `e2e-setup`, run its probe (`bin/e2e-probe.mjs`) once against your repo to confirm it finds a browser + runner before relying on it. For `agent-team`, run its Step 0 isolation probe once against your harness before promising anyone the competing-candidates tier — the flag existing in your harness's docs is not proof it works.
+**For `skill-principal` (9), `e2e-setup` (10), `evidence` (11) and `agent-team` (12):** none of the above. All four are plain markdown plus a handful of scripts, and work with any agent that reads skill files or runs Bash. For `skill-principal`, run `/model-audit` once after copying it in — the capability profile ships with the dates *its author* last verified, not the day you downloaded it. For `e2e-setup`, run its probe (`bin/e2e-probe.mjs`) once against your repo to confirm it finds a browser + runner before relying on it. `evidence` assumes `e2e-setup` has already run and produced a `READY`/`PARTIAL` verdict. For `agent-team`, run its Step 0 isolation probe once against your harness before promising anyone the competing-candidates tier — the flag existing in your harness's docs is not proof it works.
 
-**For `webgl-art` (12):** no framework is required for a standalone HTML/WebGL page. Install the companion `angular-frontend` or `frontend-developer` skill when the target uses that framework. Node.js is only needed to run the included bridge tests.
+**For `webgl-art` (13):** no framework is required for a standalone HTML/WebGL page. Install the companion `angular-frontend` (14) or a React frontend-standards skill when the target uses that framework. Node.js is only needed to run the included bridge tests.
+
+**For `product-ux` (15), `apple-hig` (16), `ui-ux-pro-max` (19) and `plan-doc` (20):** plain markdown reference material, no MCP server required. `product-designer` (17) additionally needs the **Pencil MCP server** configured for its wireframe/visual-UI stages. `github-issues` (18) needs the `gh` CLI already logged in with access to the target repo/board.
+
+**Per-project config, asked once and persisted:** `product-designer` (17), `github-issues` (18) and `evidence` (11) each read an optional `.agent-rules.local` file at the repo root (see each plugin's `.agent-rules.local.example`) for values like doc locations, board/org identifiers, and log paths — unset values are asked for once and the answer is written back, instead of being hardcoded per project.
 
 ### Installation for Gemini/Claude Agents
 Copy the desired plugin folder(s) directly into your agent's config or project plugins directory:
@@ -140,4 +198,3 @@ C:\Users\<YourUsername>\.gemini\config\plugins\
 ```
 
 Each directory contains a root `plugin.json` for existing agent compatibility. Codex-ready packages also include `.codex-plugin/plugin.json`. Skill instructions live under `skills/<skill-name>/SKILL.md`.
-

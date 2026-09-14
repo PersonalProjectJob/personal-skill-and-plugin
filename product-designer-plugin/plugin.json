@@ -1,0 +1,5 @@
+{
+  "name": "product-designer-plugin",
+  "version": "1.0.0",
+  "description": "UX/UI design workflow — mandatory Design System Audit before any design work, a two-stage wireframe-then-visual-UI flow through Pencil MCP with a hard approval gate between stages, and component-library reuse-before-create. Config (doc location, report channel) is optional and asked-for-once, not hardcoded."
+}

@@ -97,6 +97,129 @@ function apiObserver(page, expectedApiBase) {
   }
 }
 
+// ------------------------------------------------------------- network log
+/**
+ * Bộ đệm network CHI TIẾT cho step `expectRequest` + evidence debug khi FAIL.
+ * Khác `apiObserver` ở trên (mục đích khác: apiObserver chỉ verify ĐÚNG MÔI
+ * TRƯỜNG qua host; cái này verify business logic tầng request/response cho
+ * từng bước — method, body, status).
+ */
+const SECRET_KEY_SOURCE = 'password|passwd|token|secret|apikey|api[-_]?key|authorization'
+const SECRET_KEY_PATTERN = new RegExp(SECRET_KEY_SOURCE, 'i')
+const RAW_SECRET_FIELD_PATTERNS = [
+  new RegExp(
+    `(?:^|[?&,{;\\r\\n])\\s*["']?[\\w$.-]*(?:${SECRET_KEY_SOURCE})[\\w$.-]*["']?\\s*[:=]`,
+    'i',
+  ),
+  new RegExp(
+    `\\bname\\s*=\\s*(?:["'][^"']*(?:${SECRET_KEY_SOURCE})[^"']*["']|[^\\s;]*(?:${SECRET_KEY_SOURCE})[^\\s;]*)`,
+    'i',
+  ),
+]
+const REDACTED_RAW_BODY = '[REDACTED: request body contains sensitive field]'
+
+function maskSecrets(value) {
+  if (Array.isArray(value)) return value.map(maskSecrets)
+  if (value && typeof value === 'object') {
+    const out = {}
+    for (const [k, v] of Object.entries(value)) out[k] = SECRET_KEY_PATTERN.test(k) ? '***' : maskSecrets(v)
+    return out
+  }
+  return value
+}
+
+function maskRawBody(raw) {
+  const text = String(raw)
+  // Raw bodies have no reliable grammar here: they may be form data, multipart,
+  // or malformed JSON. Once a sensitive field is present, fail closed instead
+  // of guessing the value boundary and risking a partial secret leak.
+  return RAW_SECRET_FIELD_PATTERNS.some((pattern) => pattern.test(text)) ? REDACTED_RAW_BODY : text
+}
+
+function maskUrlSecrets(rawUrl) {
+  try {
+    const url = new URL(rawUrl)
+    if (url.password) url.password = '***'
+    for (const key of [...url.searchParams.keys()]) {
+      if (SECRET_KEY_PATTERN.test(key)) url.searchParams.set(key, '***')
+    }
+    return url.toString()
+  } catch {
+    return maskRawBody(rawUrl)
+  }
+}
+
+function parseBodyMaybeJson(raw) {
+  if (!raw) return null
+  try {
+    return maskSecrets(JSON.parse(raw))
+  } catch {
+    return maskRawBody(String(raw)).slice(0, 2000)
+  }
+}
+
+/** khớp `partialMatch({a:1,b:2}, {a:1})` === true; kiểu partial-object-match dùng cho `bodyIncludes`. */
+function partialMatch(actual, expected) {
+  if (expected === null || typeof expected !== 'object') return actual === expected
+  if (!actual || typeof actual !== 'object') return false
+  return Object.entries(expected).every(([k, v]) => partialMatch(actual[k], v))
+}
+
+function networkObserver(page) {
+  const entries = []
+  const byRequest = new Map()
+  page.on('request', (req) => {
+    const type = req.resourceType()
+    if (type !== 'xhr' && type !== 'fetch') return
+    const entry = {
+      method: req.method(),
+      url: maskUrlSecrets(req.url()),
+      requestBody: parseBodyMaybeJson(req.postData()),
+      status: null,
+      responseBody: null,
+      consumed: false,
+    }
+    byRequest.set(req, entry)
+    entries.push(entry)
+  })
+  page.on('response', async (res) => {
+    const entry = byRequest.get(res.request())
+    if (!entry) return
+    entry.status = res.status()
+    const contentType = res.headers()['content-type'] || ''
+    if (/json|text/i.test(contentType)) {
+      try {
+        entry.responseBody = parseBodyMaybeJson(await res.text())
+      } catch (err) {
+        entry.responseBody = `<không đọc được: ${err.message}>`
+      }
+    } else {
+      entry.responseBody = `<bỏ qua — content-type ${contentType || 'không rõ'}>`
+    }
+  })
+  return {
+    entries,
+    /** glob đơn giản: chỉ `*`, escape mọi ký tự regex đặc biệt khác. */
+    match({ urlPattern, method }) {
+      const re = urlPattern
+        ? new RegExp('^' + String(urlPattern).replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$')
+        : null
+      return entries.find(
+        (e) => !e.consumed && (!re || re.test(e.url)) && (!method || e.method.toUpperCase() === String(method).toUpperCase()),
+      )
+    },
+    recent(n = 5) {
+      return entries.slice(-n).map((entry) => ({
+        method: entry.method,
+        url: entry.url,
+        requestBody: entry.requestBody,
+        status: entry.status,
+        responseBody: entry.responseBody,
+      }))
+    },
+  }
+}
+
 function emit(payload, code) {
   console.log(JSON.stringify(payload, null, 2))
   process.exit(code)
@@ -319,6 +442,19 @@ function pick(locator, sel) {
   return locator.first()
 }
 
+async function readElementBox(locator) {
+  const count = await locator.count().catch(() => 0)
+  if (count !== 1) return null
+  return locator
+    .first()
+    .evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      if (!rect.width && !rect.height) return null
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+    })
+    .catch(() => null)
+}
+
 // --------------------------------------------------------------- login UI
 const LOGIN_CFG = (() => {
   const f = [join(dot, 'login.json'), join(dirname(fileURLToPath(import.meta.url)), 'login.json')].find(existsSync)
@@ -444,9 +580,10 @@ try {
   context = await browser.newContext(ctxOpts)
   if (flow.trace !== false) await context.tracing.start({ screenshots: true, snapshots: true })
   page = await context.newPage()
-  page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text().slice(0, 500)))
-  page.on('pageerror', (e) => pageErrors.push(String(e.message).slice(0, 500)))
+  page.on('console', (m) => m.type() === 'error' && consoleErrors.push(maskRawBody(m.text()).slice(0, 500)))
+  page.on('pageerror', (e) => pageErrors.push(maskRawBody(String(e.message)).slice(0, 500)))
   readApiHosts = apiObserver(page, env.secrets.apiBase)
+  const netObserver = networkObserver(page)
 
   if (loginMode === 'ui' && !stateFresh) {
     await performUiLogin(page, loginRecord)
@@ -563,8 +700,7 @@ try {
           rec.strategy = strategy
           if (escapeHatch) escapeHatchUsed++
           const selected = pick(locator, step.expectVisible)
-          const visible = await selected.isVisible()
-          const box = visible ? await selected.boundingBox() : null
+          const box = await readElementBox(selected)
           const viewport = page.viewportSize()
           const inViewport = Boolean(
             box &&
@@ -576,7 +712,7 @@ try {
           )
           rec.viewportBox = box
           rec.inViewport = inViewport
-          if (!visible) throw new Error('phần tử không hiển thị')
+          if (!box) throw new Error('phần tử không hiển thị')
           if (!inViewport) throw new Error('phần tử có trong DOM nhưng chưa nằm trong viewport — cần scroll như người dùng')
           expectationsSinceLastShot.push({ step: i, verb, selector: step.expectVisible, inViewport, viewportBox: box })
           provenSinceLastShot = true
@@ -600,6 +736,40 @@ try {
           await page.waitForURL((u) => u.href.includes(String(step.expectUrl)) || u.pathname.includes(String(step.expectUrl)), { timeout })
           rec.url = page.url()
           expectationsSinceLastShot.push({ step: i, verb, url: String(step.expectUrl) })
+          provenSinceLastShot = true
+          break
+        }
+
+        case 'expectRequest': {
+          const spec = step.expectRequest
+          const needsResponse = spec.expectStatus !== undefined
+          const deadline = Date.now() + timeout
+          let entry = netObserver.match({ urlPattern: spec.urlPattern, method: spec.method })
+          while ((!entry || (needsResponse && entry.status === null)) && Date.now() < deadline) {
+            await page.waitForTimeout(100)
+            entry = netObserver.match({ urlPattern: spec.urlPattern, method: spec.method })
+          }
+          if (!entry) {
+            throw new Error(
+              `expectRequest không khớp: method=${spec.method || '*'} urlPattern=${spec.urlPattern || '*'}. ` +
+                `5 request gần nhất: ${JSON.stringify(netObserver.recent(5))}`,
+            )
+          }
+          if (needsResponse && entry.status === null) {
+            throw new Error(`expectRequest khớp request nhưng chưa nhận response trong ${timeout}ms`)
+          }
+          if (spec.bodyIncludes && !partialMatch(entry.requestBody, spec.bodyIncludes)) {
+            throw new Error(
+              `expectRequest khớp URL/method nhưng SAI body. Mong đợi chứa: ${JSON.stringify(maskSecrets(spec.bodyIncludes))}. ` +
+                `Thực tế: ${JSON.stringify(entry.requestBody)}`,
+            )
+          }
+          if (spec.expectStatus !== undefined && entry.status !== spec.expectStatus) {
+            throw new Error(`expectRequest khớp request nhưng SAI status. Mong đợi ${spec.expectStatus}, thực tế ${entry.status}`)
+          }
+          entry.consumed = true
+          rec.matchedRequest = { method: entry.method, url: entry.url, status: entry.status }
+          expectationsSinceLastShot.push({ step: i, verb, matchedRequest: rec.matchedRequest })
           provenSinceLastShot = true
           break
         }
@@ -679,6 +849,35 @@ try {
     } catch (err) {
       rec.status = 'fail'
       rec.error = String(err.message).split('\n').slice(0, 3).join(' ')
+      rec.consoleErrorsAtFailure = [...consoleErrors]
+      rec.pageErrorsAtFailure = [...pageErrors]
+      rec.networkRecentAtFailure = netObserver.recent(10)
+      // Ảnh chẩn đoán không phải evidence shot (không qua guard 4 ràng buộc).
+      // Đây là best-effort và không được phép che lỗi gốc của bước đã FAIL.
+      try {
+        let failureBox = rec.viewportBox
+        if (!failureBox && verb === 'waitFor' && step[verb]) {
+          const { locator } = locate(page, step[verb])
+          failureBox = await readElementBox(locator)
+        }
+        if (failureBox) {
+          const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }))
+          rec.failureBoundingBox = {
+            x: failureBox.x + scroll.x,
+            y: failureBox.y + scroll.y,
+            width: failureBox.width,
+            height: failureBox.height,
+          }
+        }
+
+        const failFile = join(outDir, `FAILURE-step${i}-${verb}.png`)
+        // Bounding boxes are CSS/document-relative above. `scale: css` keeps
+        // them aligned with image pixels even on DSF=2 mobile/tablet contexts.
+        await page.screenshot({ path: failFile, fullPage: Boolean(rec.failureBoundingBox), scale: 'css' })
+        rec.failureShot = failFile
+      } catch {
+        /* ảnh chẩn đoán là best-effort */
+      }
       steps.push({ ...rec, ms: Date.now() - t0 })
       failure = `bước ${i} (${verb}): ${rec.error}`
       verdict = 'FLOW_FAILED'

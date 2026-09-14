@@ -1,6 +1,6 @@
 ---
 name: feature-focused-tester
-description: Plan, write, and execute tests targeted at a newly added or modified feature in this React 18 + Vite (JS/JSX) repo. Drives a 3-layer progression that maps to the repo data boundary — Layer 1 Test UI (component render/states/responsive), Layer 2 Test call API (data hooks -> repositories -> adapters, query keys + mutation invalidation), Layer 3 Test flow (E2E user journey). Produces test_plan.md and walkthrough.md artifacts, runs targeted (not full-suite) tests, and reports QA results to Telegram Thread 735.
+description: Plan, write, and execute tests targeted at a newly added or modified feature in this React 18 + Vite (JS/JSX) repo. Drives a 3-layer progression that maps to the repo data boundary — Layer 1 Test UI (component render/states/responsive), Layer 2 Test call API (data hooks -> repositories -> adapters, query keys + mutation invalidation), Layer 3 Test flow (E2E user journey). Produces test_plan.md and walkthrough.md artifacts, runs targeted (not full-suite) tests, and reports QA results to a configurable Telegram QA thread.
 ---
 
 # Feature-Focused Tester Skill
@@ -15,6 +15,15 @@ Design, write, and run tests focused on one target feature or change. Tests prog
 
 Token / design-system compliance is **out of scope** here — it belongs to the `frontend-code-standards` skill. This skill may run `pnpm lint:tokens` as a quick gate (see Layer 1) but does not re-document token rules.
 
+## Configuration this skill reads
+
+From `${REPO_ROOT}/.agent-rules.local` (see `.agent-rules.local.example`) — optional, degrades
+gracefully if unset:
+
+| Variable | Meaning | If unset |
+|---|---|---|
+| `TELEGRAM_THREAD_QA` | Thread/channel that receives the QA pass/fail report (see "Telegram QA reporting" below) | Skill **asks the user once**, then writes the answer into `.agent-rules.local` (creating it from the `.example` if needed). No such channel → prints the report inline instead. |
+
 ---
 
 ## Repo facts (do not contradict)
@@ -22,7 +31,7 @@ Token / design-system compliance is **out of scope** here — it belongs to the 
 - React 18 + Vite, **JavaScript/JSX (not TypeScript)**. Package manager = **pnpm**.
 - Test runner = **Vitest v2** with `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`. **Config already exists** — do not recreate it:
   - `vitest.config.js`: `environment: 'jsdom'`, `globals: true`, `setupFiles: './src/setupTests.js'`, `include: ['tests/unit/**/*.test.{js,jsx}']`, and a `@` -> `./src` alias (usable in tests).
-  - `src/setupTests.js` **auto-wraps every `render()` with a `QueryClientProvider`** and **pre-seeds the Query cache from `localStorage`** for domain keys (`nexora_notifications`, `nexora_transactions`, `nexora_reviews`, `nexora_merchant_setup`, `nexora_profile_settings`, `nexora_pending_accounts`). So you do **not** add your own QueryClient wrapper, and seeding `localStorage` before `render()` makes the data visible immediately.
+  - `src/setupTests.js` **auto-wraps every `render()` with a `QueryClientProvider`** and **pre-seeds the Query cache from `localStorage`** for domain keys (`app_notifications`, `app_transactions`, `app_reviews`, `app_merchant_setup`, `app_profile_settings`, `app_pending_accounts`). So you do **not** add your own QueryClient wrapper, and seeding `localStorage` before `render()` makes the data visible immediately.
 - Dev server port = **3000** -> `http://localhost:3000` (e2e uses `http://127.0.0.1:3000`).
 - Scripts: `pnpm dev`, `pnpm build`, `pnpm test` (= `vitest run`), `pnpm test:watch`, `pnpm test:e2e` (= `node scripts/run-e2e.cjs`, spawns the dev server then runs `tests/e2e/**`), `pnpm lint:tokens`, `pnpm test:impact` (= the `detect-changes.cjs` in this skill), `pnpm seed:staff-demo`.
 - Data boundary: `components -> data hooks (src/data/hooks) -> repositories (src/data/repositories) -> adapters (src/data/adapters)`. Query keys in `src/data/queryKeys.js`. TanStack Query owns cached domain data; **mutations MUST invalidate the relevant query cache**. Transport is selected by `VITE_DATA_SOURCE` (`storage` | `api`); repositories are factories `createXRepository(adapter, client)`.
@@ -82,7 +91,7 @@ Then execute the layers **in order**.
 
 **Tech:** Testing Library `render` (already auto-wrapped with a QueryClient by `src/setupTests.js`) for structure/state assertions; browser MCP screenshots for visual/responsive proof.
 
-**Render assertions** — call `render()` directly. To make a component that reads domain data show data, seed `localStorage` with the matching `nexora_*` key **before** `render()` (the setup file seeds the Query cache from it):
+**Render assertions** — call `render()` directly. To make a component that reads domain data show data, seed `localStorage` with the matching `app_*` key **before** `render()` (the setup file seeds the Query cache from it):
 
 ```jsx
 import { render, screen } from '@testing-library/react';
@@ -99,7 +108,7 @@ test('renders empty state when no transactions', () => {
 });
 
 test('renders seeded transactions', () => {
-  localStorage.setItem('nexora_transactions', JSON.stringify([{ id: 't1', amount: 100 }]));
+  localStorage.setItem('app_transactions', JSON.stringify([{ id: 't1', amount: 100 }]));
   render(<AnalyticsView />);
   expect(screen.getByText(/100/)).toBeInTheDocument();
 });
@@ -154,7 +163,7 @@ describe('merchantsRepository', () => {
       const repo = createMerchantsRepository(mockAdapter, mockClient);
       mockAdapter.get.mockResolvedValue({ businessInfo: { name: 'Biz' } });
       const res = await repo.getSetup();
-      expect(mockAdapter.get).toHaveBeenCalledWith('nexora_merchant_setup');
+      expect(mockAdapter.get).toHaveBeenCalledWith('app_merchant_setup');
       expect(res).toEqual({ businessInfo: { name: 'Biz' } });
     });
   });
@@ -241,11 +250,20 @@ Create/update `walkthrough.md` summarizing:
 
 ---
 
-## Telegram QA reporting (Thread 735)
+## Telegram QA reporting
 
-Per project rules, **QA results route to Telegram Thread 735** via the project's QA script — not a generic `sendMessage` POST.
+QA results route to a dedicated QA thread/channel via the project's QA script — not a generic
+`sendMessage` POST. The thread id is config, not a hardcoded constant: read
+`TELEGRAM_THREAD_QA` from `${REPO_ROOT}/.agent-rules.local` (see `.agent-rules.local.example`).
+Unset → ask the user once, then write the answer back into `.agent-rules.local` so future runs
+don't ask again; if the project has no such channel, print the report inline instead.
 
-- Use the project QA script, e.g. `node test-pre-commit.js --telegram` (or `pnpm run test:pre-commit:telegram` if defined), which posts to Thread 735.
-- **Send when:** the pre-commit/QA suite completes (pass or fail), a quality gate flips (PASS <-> FAIL), or a P0 failure / UI bug / server crash is detected.
-- **Routing rules:** Thread 735 is QA-only. Do **not** send QA results to Thread 727 (design/dev) or Thread 718 (changelog/releases).
-- Always send on failure with the failing test names and a short error snippet, and state whether the P0 gate passed (READY_FOR_COMMIT vs NOT_READY).
+- Use the project QA script, e.g. `node test-pre-commit.js --telegram` (or
+  `pnpm run test:pre-commit:telegram` if defined), which posts to `${TELEGRAM_THREAD_QA}`.
+- **Send when:** the pre-commit/QA suite completes (pass or fail), a quality gate flips (PASS <->
+  FAIL), or a P0 failure / UI bug / server crash is detected.
+- **Routing rules:** the QA thread is QA-only. Do **not** send QA results to any other
+  design/dev/changelog thread the project uses — if your project has multiple Telegram threads for
+  different purposes, keep this one dedicated to QA.
+- Always send on failure with the failing test names and a short error snippet, and state whether
+  the P0 gate passed (READY_FOR_COMMIT vs NOT_READY).

@@ -1,0 +1,8 @@
+# Copy to .agent-rules.local (gitignored) and fill in. Optional — the skill asks
+# once and writes the answer back here if unset when first needed.
+# If this file already exists for other skills in your setup, just add this line
+# to it instead of creating a second one.
+
+# Telegram thread/channel id that receives QA pass/fail reports.
+# Leave unset to have the skill print the report inline instead of sending it.
+TELEGRAM_THREAD_QA=<thread/channel id, or leave unset>

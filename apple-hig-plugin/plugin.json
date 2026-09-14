@@ -1,0 +1,5 @@
+{
+  "name": "apple-hig-plugin",
+  "version": "1.0.0",
+  "description": "Design, build, or review UI for Apple platforms — iOS, iPadOS, macOS, or Apple-inspired web. Adaptive layout, size classes, Dynamic Type, Dark Mode, safe area, keyboard avoidance, VoiceOver, SF Symbols, SwiftUI/UIKit navigation — grounded in the Human Interface Guidelines, not copied from them."
+}

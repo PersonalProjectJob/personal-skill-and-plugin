@@ -1,0 +1,12 @@
+﻿{
+  "id": "COMPONENT-INCONSISTENT",
+  "description": "Thành phần giao diện không nhất quán giữa các trang (lệch > 4px trên ≥ 3 route)",
+  "scope": "element",
+  "selector": "button, a[href], input:not([type=\"hidden\"]), select, [role=\"button\"], [role=\"link\"], [role=\"tab\"]",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "fact": "component:inconsistent", "op": "truthy" }
+    ]
+  }
+}

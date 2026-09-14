@@ -1,0 +1,13 @@
+{
+  "id": "DISABLED-NOT-DISTINCT",
+  "description": "Phần tử [disabled] không khác biệt thị giác (opacity >= 1 và cursor khác not-allowed)",
+  "scope": "element",
+  "selector": "[disabled]",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "fact": "styleNum:opacity", "op": "gte", "value": 1 },
+      { "fact": "style:cursor", "op": "ne", "value": "not-allowed" }
+    ]
+  }
+}

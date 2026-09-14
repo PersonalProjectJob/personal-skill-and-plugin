@@ -1,0 +1,16 @@
+{
+  "id": "TEXT-CLIPPED",
+  "description": "Chữ bị cắt cụt (scrollWidth > clientWidth), không phải cắt có chủ ý",
+  "scope": "element",
+  "selector": "p, span, a, h1, h2, h3, h4, h5, h6, li, td, th, dd, dt, label, button, summary, figcaption, div",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "fact": "hasDirectText", "op": "truthy" },
+      { "fact": "overflowAmountX", "op": "gt", "value": 1 },
+      { "fact": "style:overflow-x", "op": "in", "value": ["hidden", "clip"] },
+      { "fact": "style:-webkit-line-clamp", "op": "eq", "value": "none" },
+      { "fact": "style:text-overflow", "op": "notContains", "value": "ellipsis" }
+    ]
+  }
+}

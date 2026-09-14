@@ -1,0 +1,17 @@
+# .agent-rules.local.example — per-project config for product-designer
+#
+# Copy this file to `.agent-rules.local` at your repo root and fill in what applies.
+# Both variables are OPTIONAL — SKILL.md documents what happens when either is unset.
+# If this file is already used by other skills in your setup (e.g. skill-principal),
+# just add these two lines to your existing `.agent-rules.local` instead of creating a
+# second one.
+
+# OPTIONAL — where product/design docs, wireframes, mockups, and the component library
+# live in this repo. Unset -> defaults to `docs/`.
+PRODUCT_DOC_DIR=<path to your product-doc directory, e.g. docs/product>
+
+# OPTIONAL — chat thread/channel that receives the Step 10 design-progress report.
+# Unset -> the skill asks you once at report time, then writes your answer back into
+# this file so it doesn't ask again. Leave unset entirely if you have no such channel;
+# the skill prints the report inline instead.
+TELEGRAM_THREAD_DESIGN=<thread/channel id, or leave unset>

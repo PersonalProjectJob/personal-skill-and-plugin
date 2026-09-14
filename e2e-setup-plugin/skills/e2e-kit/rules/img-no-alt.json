@@ -1,0 +1,13 @@
+{
+  "id": "IMG-NO-ALT",
+  "description": "Thẻ <img> thiếu alt và không aria-hidden",
+  "scope": "element",
+  "selector": "img",
+  "match": {
+    "all": [
+      { "fact": "hasAttr:alt", "op": "falsy" },
+      { "fact": "closest:[aria-hidden=\"true\"]", "op": "falsy" },
+      { "fact": "attr:role", "op": "ne", "value": "presentation" }
+    ]
+  }
+}

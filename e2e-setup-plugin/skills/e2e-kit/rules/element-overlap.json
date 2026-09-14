@@ -1,0 +1,13 @@
+﻿{
+  "id": "ELEMENT-OVERLAP",
+  "description": "Phần tử bị che khuất/chồng lấn > 25% diện tích bởi phần tử khác (loại trừ sticky/fixed)",
+  "scope": "element",
+  "selector": "a[href], button, input:not([type=\"hidden\"]), select, textarea, p, span, h1, h2, h3, h4, h5, h6, label, [role=\"button\"], [role=\"link\"]",
+  "match": {
+    "all": [
+      { "fact": "visible", "op": "truthy" },
+      { "fact": "inViewport", "op": "truthy" },
+      { "fact": "overlap:ratio", "op": "gt", "value": 0.25 }
+    ]
+  }
+}

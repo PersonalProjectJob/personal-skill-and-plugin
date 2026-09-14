@@ -8,8 +8,8 @@ console.log('\x1b[36m%s\x1b[0m', '=== Design Token & Style Linter ===');
 const allowedCustomColors = [
   'luxuryBlack', 'luxuryCoal', 'luxuryBronze', 'luxuryGold', 'luxuryGoldLight', 'luxuryGoldDark', 'luxuryAmber', 'brandCyan', 'inkBlue', 'mutedGrey',
   'floxMidnightInk', 'floxSnowWhite', 'floxSlateGray', 'floxAnthracite', 'floxLightFog', 'floxObsidianBlack', 'floxElectricViolet', 'floxVividRose',
-  'nexoraCanvas', 'nexoraSurface', 'nexoraSurfaceMuted', 'nexoraBorder', 'nexoraRule', 'nexoraText', 'nexoraMuted', 'nexoraSubtle', 'nexoraSidebar',
-  'nexoraSidebarPanel', 'nexoraBrand', 'nexoraBrandDark', 'nexoraBrandSoft', 'nexoraSuccess', 'nexoraWarning', 'nexoraDanger', 'nexoraTeal', 'nexoraLavender',
+  'novaCanvas', 'novaSurface', 'novaSurfaceMuted', 'novaBorder', 'novaRule', 'novaText', 'novaMuted', 'novaSubtle', 'novaSidebar',
+  'novaSidebarPanel', 'novaBrand', 'novaBrandDark', 'novaBrandSoft', 'novaSuccess', 'novaWarning', 'novaDanger', 'novaTeal', 'novaLavender',
   'white', 'black', 'transparent', 'current', 'inherit'
 ];
 
@@ -103,7 +103,7 @@ try {
             fileViolations.push({
               lineNum,
               type: 'Generic Tailwind Color',
-              message: `Avoid standard Tailwind color [${match}]. Nexora uses custom brand tokens like [luxuryGold, nexoraBrand, floxElectricViolet, etc.].`,
+              message: `Avoid standard Tailwind color [${match}]. This project uses custom brand tokens like [luxuryGold, novaBrand, floxElectricViolet, etc.].`,
               snippet: line.trim()
             });
           });
@@ -135,7 +135,7 @@ try {
   });
 
   if (totalViolations > 0) {
-    console.log(`\n\x1b[31m%s\x1b[0m`, `Total violations: ${totalViolations}. Please fix these style issues to adhere to the Nexora Design System.`);
+    console.log(`\n\x1b[31m%s\x1b[0m`, `Total violations: ${totalViolations}. Please fix these style issues to adhere to this project's Design System.`);
     process.exit(1);
   } else {
     console.log('\n\x1b[32m%s\x1b[0m', 'Design System Token Linter: PASSED! No hardcoded or generic styles found.');
