@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebGL Art"
+  short_description: "Independent HTML/WebGL with React and Angular hosts"
+  default_prompt: "Use $webgl-art to build a reusable artistic HTML/WebGL experience, choose its React or Angular host boundary, and verify lifecycle, content mapping and performance."

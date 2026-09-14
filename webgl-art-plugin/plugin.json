@@ -1,0 +1,33 @@
+{
+  "name": "webgl-art-plugin",
+  "version": "1.0.0",
+  "description": "Build reusable artistic websites with an independent HTML/CSS/JavaScript and WebGL runtime, optionally connected to React or Angular through a persistent iframe and validated message bridge.",
+  "author": {
+    "name": "PersonalProjectJob",
+    "url": "https://github.com/PersonalProjectJob"
+  },
+  "repository": "https://github.com/PersonalProjectJob/personal-skill-and-plugin",
+  "keywords": [
+    "webgl",
+    "html",
+    "react",
+    "angular",
+    "creative-coding",
+    "performance"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "WebGL Art",
+    "shortDescription": "Build performant HTML/WebGL art with React or Angular.",
+    "longDescription": "Design and implement artistic websites with semantic HTML fallbacks, an independent WebGL runtime, optional React or Angular hosts, validated iframe messaging, quality tiers, lifecycle controls, and measured performance.",
+    "developerName": "PersonalProjectJob",
+    "category": "Developer Tools",
+    "capabilities": [
+      "WebGL art direction",
+      "HTML runtime architecture",
+      "React and Angular bridges",
+      "Performance verification"
+    ],
+    "defaultPrompt": "Use $webgl-art to build a reusable artistic HTML/WebGL experience, choose its React or Angular host boundary, and verify lifecycle, content mapping, and performance."
+  }
+}
