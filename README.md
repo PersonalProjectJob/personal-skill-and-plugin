@@ -4,7 +4,7 @@ Three families of skills for AI coding assistants (Antigravity, Claude, Codex):
 
 1. **Figma / frontend automation** (skills 1–8) — interface with Figma through the **figma-console MCP server**, enabling the agent to act as a senior UI/UX designer and design system engineer: design-system extraction, component-driven assembly, asset cleaning, and frontend test/standards enforcement.
 2. **Agent execution and orchestration** (skills 9–11) — file-based routing, browser evidence setup, and cross-reviewed multi-agent execution without a required MCP server.
-3. **Web architecture and graphics** (skill 12, `webgl-art`) — builds artistic HTML/WebGL experiences with React or Angular integration while preserving fallbacks, lifecycle ownership, and measurable performance.
+3. **Web architecture and framework engineering** (skills 12–14) — builds artistic HTML/WebGL experiences and maintainable Angular or React applications while preserving project conventions, lifecycle ownership, and measurable performance.
 
 ---
 
@@ -114,6 +114,21 @@ Builds reusable artistic websites around a semantic HTML experience and a separa
 - **Reusable content contract**: separates authored scene/content data from rendering code so future portfolio or campaign pages can add sections and assets without rewriting the host protocol.
 - **Tested bridge starter**: ships a dependency-free message bridge and Node test suite for origin, source, schema, revision, and disposal behavior.
 
+### 13. 🅰️ Angular Frontend (`angular-frontend`)
+Builds, fixes, refactors, and reviews Angular applications using the versions and architecture actually installed in the target project.
+- **Version-aware execution**: inspects Angular, CLI, TypeScript, RxJS, workspace configuration, rendering mode, and local commands before choosing APIs.
+- **Complete application surface**: covers standalone and NgModule composition, dependency injection, Signals/RxJS, HTTP, forms, routing, accessibility, SSR, security, and tests.
+- **Scoped guidance**: separates Angular correctness requirements from framework recommendations and project-specific decisions.
+- **Optional WebGL connection**: coordinates Angular change detection, renderer lifecycle, validated iframe messaging, and accessible fallback behavior with `webgl-art` when installed.
+
+### 14. ⚛️ React Frontend Developer (`frontend-developer`)
+Provides project-neutral React and TSX implementation guidance without forcing a router, state library, styling system, data client, or meta-framework.
+- **Stack discovery first**: inspects exact React, renderer, framework, TypeScript, routing, state, data, form, styling, translation, and test versions before editing.
+- **Explicit ownership**: covers component boundaries, minimal state, Hook rules, effects and cleanup, refs, server state, mutations, forms, routing, and error boundaries.
+- **Runtime quality**: includes semantic HTML, accessibility, responsive assets, measured performance, security, and lifecycle ownership for imperative resources.
+- **Verification by risk**: maps logic, component, data, routing, visible-flow, and shared-architecture changes to proportionate tests and evidence.
+- **Optional WebGL connection**: integrates with the `webgl-art` React bridge for persistent iframe or direct canvas experiences without moving the application into the render loop.
+
 ---
 
 ## 🛠️ How to Use
@@ -127,6 +142,8 @@ Builds reusable artistic websites around a semantic HTML experience and a separa
 **For `skill-principal` (9), `e2e-setup` (10) and `agent-team` (11):** none of the above. All three are plain markdown plus a handful of scripts, and work with any agent that reads skill files or runs Bash. For `skill-principal`, run `/model-audit` once after copying it in — the capability profile ships with the dates *its author* last verified, not the day you downloaded it. For `e2e-setup`, run its probe (`bin/e2e-probe.mjs`) once against your repo to confirm it finds a browser + runner before relying on it. For `agent-team`, run its Step 0 isolation probe once against your harness before promising anyone the competing-candidates tier — the flag existing in your harness's docs is not proof it works.
 
 **For `webgl-art` (12):** no framework is required for a standalone HTML/WebGL page. Install the companion `angular-frontend` or `frontend-developer` skill when the target uses that framework. Node.js is only needed to run the included bridge tests.
+
+**For `angular-frontend` (13) and `frontend-developer` (14):** use the package manager and local commands already configured by the target project. Neither plugin installs Angular, React, a build tool, or a UI library. Install `webgl-art` only for an artistic WebGL experience.
 
 ### Installation for Gemini/Claude Agents
 Copy the desired plugin folder(s) directly into your agent's config or project plugins directory:

@@ -1,0 +1,33 @@
+{
+  "name": "angular-frontend-plugin",
+  "version": "1.0.0",
+  "description": "Build, fix, refactor, and review Angular frontend applications with guidance matched to the installed Angular, TypeScript, and RxJS versions.",
+  "author": {
+    "name": "PersonalProjectJob",
+    "url": "https://github.com/PersonalProjectJob"
+  },
+  "repository": "https://github.com/PersonalProjectJob/personal-skill-and-plugin",
+  "keywords": [
+    "angular",
+    "typescript",
+    "rxjs",
+    "signals",
+    "frontend",
+    "testing"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Angular Frontend",
+    "shortDescription": "Build Angular apps with version-aware engineering guidance.",
+    "longDescription": "Implement and review Angular components, templates, dependency injection, Signals and RxJS state, HTTP flows, forms, routing, accessibility, performance, and tests using the target project's installed versions and conventions.",
+    "developerName": "PersonalProjectJob",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Angular implementation",
+      "Signals and RxJS",
+      "Forms and routing",
+      "Testing and review"
+    ],
+    "defaultPrompt": "Use $angular-frontend to inspect this Angular project and implement the requested change using its installed version and conventions, then verify the affected behavior."
+  }
+}

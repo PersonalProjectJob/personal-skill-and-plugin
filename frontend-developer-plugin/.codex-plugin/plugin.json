@@ -1,0 +1,33 @@
+{
+  "name": "frontend-developer-plugin",
+  "version": "1.0.0",
+  "description": "Build, fix, refactor, and review React frontend applications with version-aware guidance for components, hooks, data flows, accessibility, performance, and tests.",
+  "author": {
+    "name": "PersonalProjectJob",
+    "url": "https://github.com/PersonalProjectJob"
+  },
+  "repository": "https://github.com/PersonalProjectJob/personal-skill-and-plugin",
+  "keywords": [
+    "react",
+    "typescript",
+    "tsx",
+    "frontend",
+    "accessibility",
+    "testing"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "React Frontend Developer",
+    "shortDescription": "Build React apps using the project's real stack and versions.",
+    "longDescription": "Implement and review React components, hooks, state, data and form flows, routing, styling, accessibility, performance, and tests while preserving the target project's framework, rendering mode, dependencies, and conventions.",
+    "developerName": "PersonalProjectJob",
+    "category": "Developer Tools",
+    "capabilities": [
+      "React and TSX implementation",
+      "Hooks and state ownership",
+      "Data and user flows",
+      "Testing and review"
+    ],
+    "defaultPrompt": "Use $frontend-developer to inspect this React project, implement the requested change using its installed stack and conventions, and verify the affected behavior."
+  }
+}
